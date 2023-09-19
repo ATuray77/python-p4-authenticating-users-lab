@@ -33,6 +33,45 @@ class IndexArticle(Resource):
         articles = [article.to_dict() for article in Article.query.all()]
         return articles, 200
 
+# my POST work starts
+class Login(Resource):
+    def post(self):
+        user = User.query.filter(  # query database to verify user's login credentials. then store stores the authenticated user's id in the session
+            User.username == request.get_json()['username']
+        ).first()
+
+        session['user_id'] = user.id
+        return jsonify(user.to_dict())
+    
+api.add_resource(Login, '/login')
+# my POST work ends
+
+# my check session work starts (we need to get the user id from the backend when the user logs out and wants to log in again)
+class CheckSession(Resource):
+    def get(self):
+        user = User.query.filter(User.id == session.get('user_id')).first()
+        if user:
+            return (user.to_dict(), 200)
+        else:
+            return { }, 401
+api.add_resource(CheckSession, '/check_session')
+
+# my check session work ends
+
+# my logout work starts
+class Logout(Resource):
+    def delete(self):
+        session["user_id"] = None
+        return { }, 204
+
+api.add_resource(Logout, '/logout')
+
+
+#         session['user_id'] = None
+#         return jsonify({'message': '204: No Content'}), 204
+# api.add_resource(Logout, '/logout')
+# my logout work ends
+
 class ShowArticle(Resource):
 
     def get(self, id):
